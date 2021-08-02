@@ -2,10 +2,14 @@ let x=y=25;
 const SIZE=25;
    let figure = [];
       let posX=5;
-      let posY=2;
-  let speed=1000;
+      let posY=3;
+  let speed=300;
 
-  //let keyStroke;
+
+
+let myWorker = new Worker('/js/worker.js')
+
+
 var canvas = document.getElementById('canvas');
 if (canvas.getContext) {
         var ctx = canvas.getContext('2d');}
@@ -51,7 +55,7 @@ for(let i=0; i<10; i++) {
 }
 
 function  gameOver(){
-  time.clearInterval();
+ clearInterval(time);
 }
 
 
@@ -159,6 +163,12 @@ function moveDown(){
 
 };
 
+function drop(){
+ 
+ if (figure.every(element=>{return (element[1]+posY+1)<24}) && (figure.every(element => {return (X[posX + element[0]][posY + element[1]+1]) !==1})))
+  { removeTetramino() ; posY=posY+1; addTetramino(); drop();} 
+ }
+
 
   let newTetramino=true;
  let tetramino;
@@ -192,12 +202,13 @@ function moveDown(){
   function play() {
   if (newTetramino){
    tetramino = Math.floor((Math.random()*7));
-  
+   myWorker.postMessage([X, tetramino]);
   console.log(tetramino);
      posX=5;
      posY=2;
    newTetramino=false;
    
+  
 
   switch (tetramino) 
     {case 0: figure = [[-1,1], [0,1], [0,0] ,[1,0]]; //z
@@ -220,6 +231,16 @@ function moveDown(){
 
 }
  
+myWorker.onmessage = function(e) {
+  console.log(e.data,"obj")
+  for(let i=0;i<e.data.rotation;i++) {rotate(figure)  ;}
+  if (e.data.hasOwnProperty('l')) {for(let i=0;i<e.data.l;i++){moveLeft();}
+}
+ if(e.data.hasOwnProperty('r')) {for(let i=0;i<e.data.r;i++){moveRigth();}
+  } 
+  // drop(); 
+}
+
 
 }
  let time=setInterval( ()=>{ play();
